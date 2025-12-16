@@ -100,8 +100,8 @@ y_bc = tf.convert_to_tensor(y_bc, dtype=tf.float32)
 # Initial data
 x_ic = np.linspace(0,1,Nx_tr).reshape(-1,1)
 t_ic = np.zeros_like(x_ic)
-# y_ic = np.sin(np.pi*x_ic)
-y_ic = np.zeros_like(x_ic)
+y_ic = np.sin(np.pi*x_ic)
+
 x_ic = tf.convert_to_tensor(x_ic, dtype=tf.float32)
 t_ic = tf.convert_to_tensor(t_ic, dtype=tf.float32)
 y_ic = tf.convert_to_tensor(y_ic, dtype=tf.float32)
@@ -140,44 +140,53 @@ t_test = tf.convert_to_tensor(t_test, dtype=tf.float32)
 y_pred = call_model(model, x_test, t_test).numpy().reshape(100,100)
 
 # Analytical solution
-y_true  = np.exp(-alpha*np.pi**2*t_test)*np.sin(np.pi*x_test)
+y_true  = np.exp(-alpha*np.pi**2*T_te)*np.sin(np.pi*X_te)
+# Error absoluto
+error = np.abs(y_pred - y_true)
 
 # 7. Plot the result --------------------------------
-plt.figure(figsize=(6,4))
-plt.imshow(y_pred, extent=[0,1,0,1], origin='lower', aspect='auto')
-plt.colorbar(label='u_pred(x,t)')
-plt.xlabel('x')
-plt.ylabel('t')
-plt.title('Predicción PINN para la ecuación del calor')
+fig, axs = plt.subplots(1, 3, figsize=(14, 4))
+
+# PINN
+im0 = axs[0].imshow(y_pred, extent=[0,1,0,1], origin='lower', aspect='auto')
+axs[0].set_title("PINN")
+axs[0].set_xlabel("x")
+axs[0].set_ylabel("t")
+plt.colorbar(im0, ax=axs[0])
+
+# Exacta
+im1 = axs[1].imshow(y_true, extent=[0,1,0,1], origin='lower', aspect='auto')
+axs[1].set_title("Solución exacta")
+axs[1].set_xlabel("x")
+plt.colorbar(im1, ax=axs[1])
+
+# Error
+im2 = axs[2].imshow(error, extent=[0,1,0,1], origin='lower', aspect='auto')
+axs[2].set_title("Error absoluto")
+axs[2].set_xlabel("x")
+plt.colorbar(im2, ax=axs[2])
+
+plt.tight_layout()
 plt.show()
 
-# =========================
-# COMPARACIÓN PINN vs. SOLUCIÓN ANALÍTICA
-# =========================
+# Distintos cortes temporales --------------------------------
 
-# (1) Error absoluto punto a punto
-#error_abs = np.abs(y_pred - y_true.numpy().reshape(Nt_te, Nx_te))
+times = [0.0, 0.25, 0.5, 0.75, 1.0]
+idx_t = [int(t * (Nt_te - 1)) for t in times]
 
-#plt.figure(figsize=(6,4))
-#plt.imshow(error_abs, extent=[0,1,0,1], origin='lower', aspect='auto', cmap='inferno')
-#plt.colorbar(label='|u_pred - u_true|')
-#plt.xlabel('x')
-#plt.ylabel('t')
-#plt.title('Error absoluto entre PINN y solución analítica')
-#plt.show()
+plt.figure(figsize=(6,4))
+for i, idx in enumerate(idx_t):
+    plt.plot(x_te, y_true[idx, :], 'k--', label=f'Exacta t={times[i]}' if i==0 else "")
+    plt.plot(x_te, y_pred[idx, :], label=f'PINN t={times[i]}')
 
-# (2) MSE global
-#mse = np.mean((y_pred - y_true.numpy().reshape(Nt_te, Nx_te))**2)
-#print(f"Error cuadrático medio (MSE): {mse:.2e}")
+plt.xlabel("x")
+plt.ylabel("u(x,t)")
+plt.legend()
+plt.title("Comparación PINN vs solución exacta")
+plt.grid(True)
+plt.show()
 
-# (3) Comparación en cortes temporales
-#plt.figure(figsize=(6,4))
-#for t_val in [0, 0.25, 0.5, 1.0]:
-#    idx = int(t_val * (Nt_te - 1))
-#    plt.plot(x_te, y_true.numpy().reshape(Nt_te, Nx_te)[idx, :], 'k-', label=f'True t={t_val}')
-#    plt.plot(x_te, y_pred[idx, :], '--', label=f'Pred t={t_val}')
-#plt.xlabel('x')
-#plt.ylabel('u(x,t)')
-#plt.title('Comparación de cortes temporales')
-#plt.legend()
-#plt.show()
+# Error L2 --------------------------------
+
+error_L2 = np.sqrt(np.mean((y_pred - y_true)**2))
+print(f"Error L2 global: {error_L2:.3e}")

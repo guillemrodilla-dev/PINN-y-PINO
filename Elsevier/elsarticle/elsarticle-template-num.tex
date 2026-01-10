@@ -164,7 +164,198 @@ PINN \sep PINO \sep Deep Learning \sep Neural Networks \sep Scientific Machine L
 
 %% main text
 %%
+\section{Limitations of Physics-Informed Neural Networks}
 
+Physics-Informed Neural Networks (PINNs) provide a flexible framework for incorporating physical laws into neural network training. However, despite their conceptual appeal, several practical limitations have been widely reported in the literature.
+
+A well-known issue is their low-frequency (spectral) bias, which makes PINNs struggle to accurately represent high-frequency components of the solution. As a consequence, they perform poorly on PDEs modeling multi-scale phenomena or involving sharp spatial and temporal variations.
+
+There are also issues related to how information from initial and boundary conditions propagates through the domain. As the distance from the boundaries or the initial time increases, the influence of these constraints may fade, which can noticeably affect accuracy in large domains or long-time simulations.
+
+Scalability is another important concern. As the dimensionality of the problem or the size of the domain grows, training becomes more expensive and, in many cases, harder to stabilize. 
+
+As a result, PINNs' performance depends strongly on the availability of additional data, careful tuning of loss weights, and problem-specific heuristics.
+
+Taken together, these limitations motivate the exploration of alternative approaches that move beyond solution-based learning toward operator-level representations, which we formalize in the following section.
+
+
+\section{Problem Formulation}
+
+We consider two broad classes of partial differential equations: stationary systems and dynamical systems. In both cases, the objective is to approximate the corresponding solution operator mapping input functions to PDE solutions.
+
+\subsection{Stationary Problems}
+
+Let $D \subset \R^d$ be a bounded domain with boundary $\partial D$. We consider stationary PDEs of the form
+
+\begin{equation}\label{eq:stationary_pde}
+\begin{aligned}
+\P(u(x),a(x)) &= 0,  &x \in D\subset\R^d,\\
+u(x) &= g(x), &x \in \partial D,
+\end{aligned}
+\end{equation}
+
+where $a \in \A$ denotes an input function parameterizing the equation, $u \in \U$ is the unknown of the equation and $g$ is a fixed boundary condition. $\P:\A\times\U\to\F$ is a partial differential operator (possibly non-linear). Here $\U$ and $\F$ are Banach spaces of functions and $\A$ is a subset of a Banach space.
+The solution operator associated with the stationary problem is defined as
+\begin{equation}\label{eq:stationary_operator}
+\G^\dagger : \A \to \U, 
+\qquad
+\G^\dagger(a) = u.
+\end{equation}
+
+\subsection{Dynamical Problems}
+
+We next consider time-dependent PDEs defined on the space-time domain $D \times (0,\infty)$. The dynamical system is given by
+\begin{equation}\label{eq:dynamic_pde}
+\begin{aligned}
+\frac{\partial u}{\partial t}(x,t) &= \mathcal{R}(u(x,t)), 
+ &(x,t) \in D \times (0,\infty),\\
+u(x,t) &= g(x,t),  &(x,t) \in \partial D \times (0,\infty),\\
+u(x,0) &= a(x),  &x \in \overline{D}.
+\end{aligned}
+\end{equation}
+
+Here, the input function $a \in \mathcal{A}$ corresponds to the initial condition of the system, $u(\cdot,t)\in\U$ for $t>0$ is the unknown and $g$ is a fixed boundary condition. $\mathcal{R}$ denotes a (possibly nonlinear) differential operator governing the dynamics. Typical examples include the Burgers equation and the incompressible Navier--Stokes equations.
+
+The solution operator associated with the dynamic problem is defined as
+\begin{equation}\label{eq:dynamic_operator}
+\G^\dagger : \A \to \mathcal{C}((0,T];\U), 
+\qquad
+\G^\dagger(a) = u.
+\end{equation}
+
+In both the stationary and dynamical settings, the objective is to approximate the solution operator $\G^\dagger$ rather than individual solution realizations. This operator-learning perspective forms the foundation of neural operators and, in particular, Physics-Informed Neural Operators introduced in the following sections.
+
+
+\subsection{Neural Operators}
+
+Neural operators aim to approximate the solution operators (\ref{eq:stationary_operator}) and (\ref{eq:dynamic_operator}). We now present the structure of a neural operator.
+\begin{defi}[Neural operator]
+    A neural operator is defined as
+    \begin{equation}\label{eq:neural_operator}
+        \bf \Gt := Q \circ \sigma(W_L + K_L)\circ\dots\circ\sigma(W_1 +K_1)\circ P,
+    \end{equation}
+    where $\bf P$ is the lift operator, it sends the lower dimension input function into a higher dimensional space, and $\bf Q$ is the projection operator, it sends the higher dimension function back to the lower dimensional space of the solution function. Both operators are parameterized with neural networks. Between those operators, the model has L layers of the form $\sigma(W_l+K_l)$. Here $W_l$ are linear operators, parameterized with matrices, $\sigma$ is the activation function (fixed), and $K_l$ are called kernel operators. The parameters $\theta$ are $P,Q,W_l,K_l$.
+\end{defi}
+
+
+\begin{defi}[Kernel Integral Operator]
+    Let $\kappa^{(l)}\in C(D\times D,\R^{d_{l+1}\times d_l})$ and let $\nu$ be a Borel measure on D. The we define the kernel integral operator $K$ mentioned above as
+    \begin{equation}
+        (Kv_l)(x) = \int_D \kappa^{(l)}(x,y)v_l(y)\ d\nu(y)\quad \forall x\in D.
+    \end{equation}
+\end{defi}
+
+We are going to work with one particular form of the kernel integral operator called Fourier convolution operator defined by
+\begin{equation}
+    (Kv_l)(x) = F^{-1}\big(R\cdot (F v_l)\big ) \quad \forall x\in D.
+\end{equation}
+
+where $F,F^{-1}$ are the FFT and its inverse respectively, and R is part of the parameter $\theta$.
+
+\subsection{Training neural operators}
+
+
+Our goal is to train a neural operator $\Gt$ that accurately approximates the solution operator $\G^\dagger$.
+This is achieved by solving an optimization problem in which the parameters $\theta$ are obtained by minimizing a loss functional that combines data fidelity with physical consistency.
+
+\paragraph{Data loss.}
+We assume access to a dataset $\{a_j, u_j\}_{j=1}^N$, where $u_j = \G^\dagger(a_j)$ and the inputs $a_j$ are independent and identically distributed samples drawn from a probability measure $\mu$ supported on $\A$.
+For the stationary problem, the pointwise data loss is defined as
+\begin{equation}
+    \Ldata(u, \Gt(a))
+    := \norm{u - \Gt(a)}_{\U}^2
+    = \int_D \abs{u(x) - \Gt(a)(x)}^2 \, \mathrm{d}x .
+\end{equation}
+The corresponding operator-level data loss is obtained by averaging over the input distribution,
+\begin{equation}
+    \Jdata(\Gt)
+    := \E_{a \sim \mu} \big[ \Ldata(u, \Gt(a)) \big]
+    \approx \frac{1}{N} \sum_{j=1}^N \int_D 
+    \abs{u_j(x) - \Gt(a_j)(x)}^2 \, \mathrm{d}x .
+\end{equation}
+The extension to time-dependent problems is completely analogous, with the loss evaluated over the space--time domain.
+
+\paragraph{Physics-informed loss: stationary problems.}
+To enforce that the learned operator is consistent with the underlying physics, PINOs incorporate the governing PDE directly into the loss function.
+For the stationary problem \eqref{eq:stationary_pde}, the physical residual is obtained by evaluating the differential operator $\P$ at the network prediction $\Gt(a)$.
+The physics-informed loss is then defined as
+\begin{equation}
+    \Lphys(a,\Gt(a)) := \int_D |\P(\Gt(a)(x),a(x))|^2dx+
+            \alpha \int_{\partial D}|\Gt(a)(x)-g(x)|^2dx ,
+\end{equation}
+where the hyper-parameter $\alpha>0$ balances the relative importance of satisfying the boundary conditions versus the interior PDE residual during optimization. 
+
+By averaging over the input distribution, we obtain the operator physics loss
+\begin{equation}
+    \Jphys(\Gt)
+    := \E_{a \sim \mu} \big[ \Lphys(a, \Gt(a)) \big] .
+\end{equation}
+
+\paragraph{Physics-informed loss: dynamical problems.}
+The same construction applies to time-dependent PDEs of the form \eqref{eq:dynamic_pde}.
+In this setting, the physical residual is given by
+\begin{equation}
+    \frac{\partial \Gt(a)}{\partial t}(x,t) - \mathcal{R}(\Gt(a)(x,t)),
+\end{equation}
+and the corresponding physics-informed loss is defined over the space--time domain,
+\begin{equation}
+    \begin{aligned}
+        \Lphys(a, \Gt(a))
+        :=& \int_0^T \int_D 
+        \abs{
+            \frac{\partial \Gt(a)}{\partial t}(x,t)
+            - \mathcal{R}(\Gt(a)(x,t))
+        }^2 \, \mathrm{d}x \, \mathrm{d}t + \alpha\int_0^T \int_{\partial D} 
+        \abs{
+            \Gt(a)(x,t)
+            - g(x,t)
+        }^2
+        \, \mathrm{d}x \, \mathrm{d}t.\\
+        & \beta \int_D \abs{
+        \Gt(a)(x,0)-a(x)
+        }^2\, \mathrm{d}x \, ,
+    \end{aligned}  
+\end{equation}
+where $\alpha, \beta > 0$ are weighting hyper-parameters that balance the relative importance of satisfying the boundary and initial conditions, respectively, against the interior PDE residual.
+
+The operator loss $\Jphys(\Gt)$ is again obtained by taking the expectation with respect to $\mu$.
+
+\paragraph{Total training objective.}
+The final loss functional used to train the Physics-Informed Neural Operator is given by a weighted combination of the data and physics losses,
+\begin{equation}
+    \Jtot(\Gt)
+    := \Jdata(\Gt) + \lambda \, \Jphys(\Gt),
+\end{equation}
+where $\lambda > 0$ balances data fitting and physical consistency.
+
+In practice, computing the time derivative of the neural operator output is non-trivial and requires additional modeling or numerical approximations, which we discuss in more detail below.
+
+
+\subsection{Derivatives of Neural Operators}
+
+For dynamical systems, the physics-informed loss requires the evaluation of the time derivative
+\(
+\partial_t \Gt(a)(x,t)
+\).
+This presents a fundamental difficulty for neural operators, as they learn mappings between function spaces rather than explicit space--time dependent solutions.
+
+In contrast to classical PINNs, where the solution is represented as a neural network $u_\theta(x,t)$ and derivatives can be computed directly via automatic differentiation, neural operators produce solution trajectories as outputs. As a result, temporal derivatives are not readily available and must be approximated.
+
+The Physics-Informed Neural Operator framework considers two main strategies to address this issue.
+
+\paragraph{Discrete-time formulation.}
+The first approach is based on a discrete-time or autoregressive formulation. The neural operator is trained to map the solution at one time step to the solution at the next time step. In this case, the time derivative is approximated using finite differences between consecutive outputs of the operator. This strategy avoids explicit differentiation with respect to time, but may lead to error accumulation when applied over long time intervals.
+
+\paragraph{Continuous-time formulation.}
+Alternatively, the neural operator can be extended to include time as an additional input variable, yielding a continuous-in-time representation of the solution. In this setting, the time derivative can be computed using automatic differentiation, allowing the PDE residual to be enforced directly. However, this approach increases computational cost and can be more difficult to scale to long-time dynamics.
+
+Both formulations reflect a trade-off between numerical stability, computational efficiency, and accuracy. The appropriate choice depends on the structure of the problem and the temporal resolution required.
+
+\subsection{From Theory to Computation}
+
+We have introduced the operator-learning framework underlying neural operators and their physics-informed extensions. We formulated both stationary and dynamical PDEs from an operator perspective and described how data-driven and physics-based losses can be combined to train Physics-Informed Neural Operators.
+
+While this formulation provides a flexible and expressive framework, its practical performance strongly depends on implementation choices, including the discretization of the domain, the treatment of derivatives, and the optimization strategy. In the following section, we turn to these computational aspects and discuss how PINNs and PINOs are implemented in practice, highlighting their similarities and differences.
 
 \section{How can we solve PDEs using PINNs and PINOs?}
 

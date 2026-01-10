@@ -172,121 +172,201 @@ PINN \sep PINO \sep Deep Learning \sep Neural Networks \sep Scientific Machine L
 
 \subsubsection{Why PINNs?}
 
-have been widely used in the recent years to solve different kinds of problems, including  , since this kind of neural networks offers several advantages over traditional neural networks, as well as over traditional numerical methods to solve . Some of these advantages are: The incorporation of physical knowledge, which constrains the network by physical laws to ensure the solutions are physically consisent; 
+PINNs have emerged in recent years as an effective framework for the solution of PDEs and related problems. By embedding the governing physical laws directly into the learning process, PINNs enforce physical consistency of the solution and reduce the reliance on large labeled datasets compared to conventional machine learning approaches. This physics-based regularization enables the treatment of nonlinear, high-dimensional PDEs, as well as coupled and multiphysics systems, within a unified framework. Moreover, PINNs circumvent the need for explicit mesh generation and yield continuous, differentiable approximations over the computational domain, which can lead to significant computational advantages over traditional numerical methods.
 
-%% Use \section commands to start a section
-\section{Section 1}
-\label{sec1}
-%% Labels are used to cross-reference an item using \ref command.
+\subsubsection{Are PINNs better than traditional numerical methods?}
 
-Section text. See Subsection \ref{subsec1}.
+Despite the aforementioned advantages of physics-informed neural networks, several limitations remain, which have motivated ongoing discussion regarding their competitiveness with established numerical solvers for partial differential equations. Figure \ref{Traditional vs PINNs}, reproduced from Ren et al. \cite{app15148092}, provides a comparative assessment of traditional numerical methods, purely data-driven approaches, and PINNs across a set of PDE-oriented benchmarks, highlighting the respective strengths and weaknesses of each paradigm.
 
-%% Use \subsection commands to start a subsection.
-\subsection{Example Subsection}
-\label{subsec1}
-
-Subsection text.
-
-%% Use \subsubsection, \paragraph, \subparagraph commands to 
-%% start 3rd, 4th and 5th level sections.
-%% Refer following link for more details.
-%% https://en.wikibooks.org/wiki/LaTeX/Document_Structure#Sectioning_commands
-
-\subsubsection{Mathematics}
-%% Inline mathematics is tagged between $ symbols.
-This is an example for the symbol $\alpha$ tagged as inline mathematics.
-
-%% Displayed equations can be tagged using various environments. 
-%% Single line equations can be tagged using the equation environment.
-\begin{equation}
-f(x) = (x+a)(x+b)
-\end{equation}
-
-%% Unnumbered equations are tagged using starred versions of the environment.
-%% amsmath package needs to be loaded for the starred version of equation environment.
-\begin{equation*}
-f(x) = (x+a)(x+b)
-\end{equation*}
-
-%% align or eqnarray environments can be used for multi line equations.
-%% & is used to mark alignment points in equations.
-%% \\ is used to end a row in a multiline equation.
-\begin{align}
- f(x) &= (x+a)(x+b) \\
-      &= x^2 + (a+b)x + ab
-\end{align}
-
-\begin{eqnarray}
- f(x) &=& (x+a)(x+b) \nonumber\\ %% If equation numbering is not needed for a row use \nonumber.
-      &=& x^2 + (a+b)x + ab
-\end{eqnarray}
-
-%% Unnumbered versions of align and eqnarray
-\begin{align*}
- f(x) &= (x+a)(x+b) \\
-      &= x^2 + (a+b)x + ab
-\end{align*}
-
-\begin{eqnarray*}
- f(x)&=& (x+a)(x+b) \\
-     &=& x^2 + (a+b)x + ab
-\end{eqnarray*}
-
-%% Refer following link for more details.
-%% https://en.wikibooks.org/wiki/LaTeX/Mathematics
-%% https://en.wikibooks.org/wiki/LaTeX/Advanced_Mathematics
-
-%% Use a table environment to create tables.
-%% Refer following link for more details.
-%% https://en.wikibooks.org/wiki/LaTeX/Tables
-\begin{table}[t]%% placement specifier
-%% Use tabular environment to tag the tabular data.
-%% https://en.wikibooks.org/wiki/LaTeX/Tables#The_tabular_environment
-\centering%% For centre alignment of tabular.
-\begin{tabular}{l c r}%% Table column specifiers
-%% Tabular cells are separated by &
-  1 & 2 & 3 \\ %% A tabular row ends with \\
-  4 & 5 & 6 \\
-  7 & 8 & 9 \\
-\end{tabular}
-%% Use \caption command for table caption and label.
-\caption{Table Caption}\label{fig1}
-\end{table}
-
-
-%% Use figure environment to create figures
-%% Refer following link for more details.
-%% https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions
-\begin{figure}[t]%% placement specifier
-%% Use \includegraphics command to insert graphic files. Place graphics files in 
-%% working directory.
-\centering%% For centre alignment of image.
-\includegraphics{example-image-a}
-%% Use \caption command for figure caption and label.
-\caption{Figure Caption}\label{fig1}
-%% https://en.wikibooks.org/wiki/LaTeX/Importing_Graphics#Importing_external_graphics
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{Imagenes/PINNs vs Traditional.png}
+\caption{Paradigm Comparison: Traditional vs. Data-Driven vs. PINNs (evaluated on PDE-specific benchmarks). Reproduced from Ren et al. \cite{app15148092}}\label{Traditional vs PINNs}
 \end{figure}
 
+From this comparison, it can be observed that PINNs exhibit favorable performance with respect to computational cost, data efficiency, and generalization capabilities, while displaying computational complexity comparable to that of conventional numerical methods. However, PINNs typically lag behind classical solvers in terms of solution accuracy and interpretability, particularly in regimes where high-fidelity numerical discretizations are well established. These observations suggest that PINNs should not be regarded as a direct replacement for traditional numerical methods, but rather as a complementary modeling strategy, especially well suited for complex, high-dimensional, or data-scarce problems where conventional approaches may face significant challenges.
 
-%% The Appendices part is started with the command \appendix;
-%% appendix sections are then done as normal sections
-\appendix
-\section{Example Appendix Section}
-\label{app1}
+\subsubsection{PINNs workflow}
 
-Appendix text.
+For solving a PDE using PINNs, the following workflow is typically followed:
+
+\begin{itemize}
+  \item \textbf{Problem Definition}: Clearly define the PDE, including the domain, boundary conditions, and any initial conditions.
+  \item \textbf{Neural Network Architecture}: Design a neural network architecture suitable for the problem at hand. This typically involves selecting the number of layers, neurons per layer, and activation functions.
+  \item \textbf{Loss Function Formulation}: Construct a loss function that incorporates the residuals of the PDE, boundary conditions, and initial conditions. This loss function quantifies how well the neural network satisfies the governing equations and constraints.
+  \item \textbf{Model Training}: Train the neural network using optimization algorithms (e.g., Adam, L-BFGS) to minimize the loss function. This involves iteratively updating the network weights based on the computed gradients of the loss.
+  \item \textbf{Model Evaluation and Validation}: After training, evaluate the performance of the PINN by comparing its predictions against known solutions or benchmark problems. This may involve computing error metrics and visualizing the results.
+\end{itemize}
+
+\subsection{Implementation Example}
+
+In order to illustrate the PINNs workflow described above, we will now present a simple implementation example for solving a one-dimensional heat equation using PINNs.
+
+\subsubsection{Problem Definition}
+
+The first step is to define the PDE we want to solve. In this case, we will consider the one-dimensional heat equation given by:
+
+\begin{equation}
+\frac{\partial u}{\partial t} = \alpha \frac{\partial^2 u}{\partial x^2}, \quad x \in [0, L], \quad t \in [0, T]
+\end{equation}
+
+with the following boundary and initial conditions:
+
+\begin{equation}
+u(0, t) = u(L, t) = 0, \quad u(x, 0) = \sin\left(\pi x\right)
+\end{equation}
+
+\subsubsection{Neural Network Architecture}
+
+A fully connected feedforward neural network is employed to approximate the solution of the governing equation. The network takes the spatial coordinate \(x\) and time \(t\) as input features, and outputs a scalar field representing the temperature \(u(x, t)\). The architecture consists of three hidden layers with 50 neurons each, this choice represents a compromise between expressive capacity and computational cost, and is consistent with commonly adopted configurations in the literature for low-dimensional parabolic PDEs. The hyperbolic tangent (tanh) function is adopted as the activation function, owing to its smoothness and continuous differentiability, which are essential for the accurate evaluation of the spatial and temporal derivatives appearing in the PDE residual through automatic differentiation.
+
+\subsubsection{Loss Function Formulation}
+
+For the implementation of this simple example, we decided not to use any data for defining the loss function, which will be solely based on the physics of the problem. In this way, the loss function \( \mathcal{L} \) is constructed as follows:
+
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{PDE} + \mathcal{L}_{BC} + \mathcal{L}_{IC}
+\end{equation}
+where
+\begin{equation}
+\mathcal{L}_{PDE} = \frac{1}{N_f} \sum_{i=1}^{N_f} \left| \frac{\partial u}{\partial t}(x_i, t_i;\theta) - \alpha \frac{\partial^2 u}{\partial x^2}(x_i, t_i;\theta) \right|^2
+\end{equation}
+\begin{equation}
+\mathcal{L}_{BC} = \frac{1}{N_b} \sum_{i=1}^{N_b} \left( |u(0, t_i;\theta)|^2 + |u(L, t_i;\theta)|^2 \right)
+\end{equation}
+\begin{equation}
+\mathcal{L}_{IC} = \frac{1}{N_0} \sum_{i=1}^{N_0} \left| u(x_i, 0;\theta) - \sin(\pi x_i) \right|^2
+\end{equation}
+
+Here, \(N_f\), \(N_b\), and \(N_0\) denote the number of collocation points for the PDE residual, boundary conditions, and initial conditions, respectively. The terms \( \mathcal{L}_{PDE} \), \( \mathcal{L}_{BC} \), and \( \mathcal{L}_{IC} \) represent the contributions to the total loss from the PDE residual, boundary conditions, and initial conditions, respectively.
+
+\subsubsection{Model Training}
+
+The neural network is trained using the Adam optimizer, which is well-suited for handling the non-convex optimization landscape typical of deep learning models. The training process involves iteratively updating the network parameters \( \theta \) to minimize the total loss \( \mathcal{L} \). An initial learning rate of \( 0.001 \) is employed, and the training is conducted over \( 6,000 \) epochs, with a decay rate of 0.9 every 1000 epochs. During each epoch, the gradients of the loss function with respect to the network parameters are computed using automatic differentiation, enabling efficient backpropagation through the network. Since this model is prettty simple we do not use any stopping criteria other than the maximum number of epochs.
+
+Figure \ref{PINN Architecture}, reproduced from Luo et al. \cite{Luo2025}, illustrates the general framework of physics-informed neural networks, summarizing in a unified schematic the main components of the methodology described above, including the neural network approximation, the incorporation of governing equations and constraints, and the optimization process.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\textwidth]{Imagenes/PINN Architecture.png}
+\caption{The framework of PINNs. Reproduced from Luo et al. \cite{Luo2025}}\label{PINN Architecture}
+\end{figure}
+
+\subsubsection{Model Evaluation and Validation}
+
+In order to check that the training has been completed successfully, we can visualize the loss evolution during the training process. Figure \ref{Loss Evolution} shows how the loss decreases as the number of epochs increases, indicating that the neural network is learning to satisfy the governing equations and constraints.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.7\textwidth]{Imagenes/LossFunctionvsEpoch.png}
+  \caption{Loss evolution during training}\label{Loss Evolution}
+\end{figure}
+
+This decreasing trend in the loss function suggests that the PINN is effectively capturing the underlying physics of the heat equation. And the flat region at the end indicates that the model has converged to a solution.
+
+After this, we can obtain the solution of the PDE by evaluating the trained neural network at desired spatial and temporal locations. Figure \ref{PINN Analytical} shows the solutions obtained by the PINN, on the right side, and analitically on the left.
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Imagenes/PINN solution.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Imagenes/Analytical Solution.png}
+    \end{minipage}
+    \caption{Solutions obtained by the PINN and analitically}\label{PINN Analytical}
+\end{figure}
+
+For comparing both solutions, we can substract them and obtain the error, which is shown in Figure \ref{Error PINN}.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.7\textwidth]{Imagenes/Error PINNvsAnalytical.png}
+  \caption{Error between PINN and analytical solution}\label{Error PINN}
+\end{figure}
+
+Analizing the error, we can see that it is pretty low, being the maximum error around \(4 \cdot 10^{-2}\). This shows that PINNs can be a good alternative for solving PDEs.
+
+We can also visualize the comparison between the PINN and analytical solutions at specific time instances. Figure \ref{Comparison at t} illustrates the temperature distribution along the spatial domain at different times, demonstrating the close agreement between the two solutions.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.7\textwidth]{Imagenes/Temporal slices.png}
+  \caption{Comparison of PINN and analytical solutions at different times}\label{Comparison at t}
+\end{figure}
+
+For a more precise evaluation of the PINNs performance, we compute the root mean squared error (RMSE) between the PINN-predicted solution and the analytical solution over a dense grid of spatial and temporal points. The RMSE is defined as:
+
+\begin{equation}
+\text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} \left( u_{\text{PINN}}(x_i, t_i) - u_{\text{analytical}}(x_i, t_i) \right)^2}
+\end{equation}
+
+where \(N\) is the total number of evaluation points, \(u_{\text{PINN}}\) is the solution predicted by the PINN, and \(u_{\text{analytical}}\) is the exact analytical solution. For our implementation, we obtained an RMSE value of approximately \(8.71 \times 10^{-4}\), indicating a high level of accuracy in the PINN's approximation of the heat equation solution.
+
+By these analyses, we can conclude that PINNs provide a viable and accurate approach for solving PDEs, effectively capturing the underlying physics of the problem while maintaining computational efficiency, although its precission may not yet rival that of traditional numerical methods in all scenarios. The distance between this two approaches may be reduced by not only using physical constraints but also data, leading to the so-called data-enhanced PINNs.
+
+\subsection{Transition to PINOs}
+
+\subsubsection{Why PINOs?}
+
+While PINNs have demonstrated to be effective for solving a variety of PDEs, they are not without limitations. Some of the main banefit provided by PINOs are: The parameter space generalization capabilities of PINOs allow them to efficiently handle a wide range of parameterized PDEs without the need for retraining, making them particularly suitable for scenarios where multiple simulations are required across different parameter settings; they can also handle complex domains, adapting to irregular, moving or parametrized geometries more naturally than PINNs; furthermore, PINOs offer real-time inference capabilities, enabling rapid predictions once trained, which is advantageous for applications requiring quick evaluations, such as control systems or real-time monitoring; lastly, this kind of models can cope with multi-query scenarios, efficiently managing multiple input conditions or source terms within a single trained model.
+
+\subsubsection{Differences between PINNs and PINOs}
+
+The main difference between PINNs and PINOs lies in their approach to solving PDEs. PINNs use a single neural network to approximate the solution of a specific PDE, while PINOs employ operator learning techniques to learn the mapping from input functions (e.g., initial conditions, boundary conditions, source terms) to the solution of the PDE. This allows PINOs to generalize across different instances of the same PDE with varying inputs, making them more versatile for problems where multiple simulations are required.
+
+This difference in approaching the problems doesn't mean that PINOs are better than PINNs, as both methods have their own strengths and weaknesses. The choice between using a PINN or a PINO depends on the specific problem at hand, the availability of data, and the desired generalization capabilities.
+
+In Table \ref{tab:methods_comparison}, reproduced from Zhang et al. \cite{zhang2025physicsinformedneuralnetworksneural}, we summarize some of the main methods used in different domains along with their reported speedup compared to traditional numerical methods.
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{l l c}
+    \hline
+    \textbf{Domain} & \textbf{Methods} & \textbf{Reported Speedup} \\ 
+    \hline
+    Fluid Dynamics & FNO, DeepONet, PINO & $10^{3}-10^{5}$ $\times$ \\ 
+    
+    Solid Mechanics & PINN, DeepONet, GNO & $10^{2}-10^{3}$ $\times$ \\ 
+    
+    Heat Transfer & PI-DeepONet, PINN & $10^{3}-10^{4}$ $\times$ \\ 
+    
+    Electromagnetics & PINN, MaxwellNet & $10^{2}-10^{3}$ $\times$ \\ 
+    \hline
+    \end{tabular}
+    \caption{Cross-domain comparison of neural methods for parametric PDEs. Reproduced from Zhang et al. \cite{zhang2025physicsinformedneuralnetworksneural}}\label{tab:methods_comparison}
+\end{table}
+
+\subsubsection{PINOs workflow}
+
+The workflow for implementing PINOs shares similarities with that of PINNs, but with key differences in the model architectures. The following steps outline the typical workflow for implementing a PINO:
+
+\begin{itemize}
+  \item \textbf{Problem Definition}: Define the PDE and the range of input functions (e.g., initial conditions, boundary conditions) that the PINO will learn to map to solutions.
+  \item \textbf{Operator Network Architecture}: Design a neural network architecture capable of learning the operator mapping from input functions to PDE solutions. This may involve using architectures like DeepONets or Fourier Neural Operators (FNOs).
+  \item \textbf{Loss Function Formulation}: Construct a loss function that measures the discrepancy between the predicted solutions and the true solutions for a set of training input functions. This typically involves sampling a diverse set of input functions and their corresponding solutions.
+  \item \textbf{Model Training}: Train the operator network using optimization algorithms to minimize the loss function. This involves iteratively updating the network weights based on the computed gradients of the loss.
+  \item \textbf{Model Evaluation and Validation}: Evaluate the performance of the trained PINO by testing its ability to generalize to unseen input functions and comparing its predictions against known solutions or benchmark problems.
+\end{itemize}
+
+\subsection{Conclusions}
+
+In this work, we have explored the methodologies of Physics-Informed Neural Networks (PINNs) and Physics-Informed Neural Operators (PINOs) for solving partial differential equations (PDEs). We have discussed the advantages and limitations of each approach, highlighting their respective strengths in handling complex physical systems. Through a detailed implementation example of a PINN applied to the one-dimensional heat equation, we demonstrated the practical workflow involved in defining the problem, designing the neural network architecture, formulating the loss function, training the model, and evaluating its performance. The results showcased the capability of PINNs to accurately approximate PDE solutions while adhering to physical laws. Furthermore, we outlined the transition to PINOs, emphasizing their operator learning framework that enables generalization across varying input conditions. Overall, both PINNs and PINOs represent promising avenues for integrating machine learning with traditional numerical methods in scientific computing, offering new tools for tackling challenging PDE problems.
 
 %% For citations use: 
 %%       \cite{<label>} ==> [1]
 
 %%
-Example citation, See \cite{lamport94}.
+%% Example citation, See \cite{lamport94}.
 
 %% If you have bib database file and want bibtex to generate the
 %% bibitems, please use
 %%
-%%  \bibliographystyle{elsarticle-num} 
-%%  \bibliography{<your bibdatabase>}
+  \bibliographystyle{elsarticle-num} 
+  \bibliography{referencias}
 
 %% else use the following coding to input the bibitems directly in the
 %% TeX file.
@@ -294,20 +374,20 @@ Example citation, See \cite{lamport94}.
 %% Refer following link for more details about bibliography and citations.
 %% https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management
 
-\begin{thebibliography}{00}
+%%\begin{thebibliography}{00}
 
 %% For numbered reference style
 %% \bibitem{label}
 %% Text of bibliographic item
 
-\bibitem{lamport94}
-  Leslie Lamport,
-  \textit{\LaTeX: a document preparation system},
-  Addison Wesley, Massachusetts,
-  2nd edition,
-  1994.
+%%\bibitem{lamport94}
+%%  Leslie Lamport,
+%%  \textit{\LaTeX: a document preparation system},
+%%  Addison Wesley, Massachusetts,
+%%  2nd edition,
+%%  1994.
 
-\end{thebibliography}
+%%\end{thebibliography}
 \end{document}
 
 \endinput

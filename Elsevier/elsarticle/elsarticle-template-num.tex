@@ -40,7 +40,7 @@
 %% The amssymb package provides various useful mathematical symbols
 \usepackage{amssymb}
 %% The amsmath package provides various useful equation environments.
-\usepackage{amsmath}
+\usepackage{amsmath, amsthm, amsfonts}
 %% The amsthm package provides extended theorem environments
 %% \usepackage{amsthm}
 
@@ -48,6 +48,49 @@
 %% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
 %% for the whole article with \linenumbers.
 %% \usepackage{lineno}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{defi}{Definition}
+
+
+%% Commands
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+
+\newcommand{\Ltwo}{L^2}
+\newcommand{\Ltwod}{L^2(D)}
+\newcommand{\Lp}[1]{L^{#1}}
+\newcommand{\Hone}{H^1}
+
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\abs}[1]{\left| #1 \right|}
+
+\newcommand{\E}{\mathbb{E}}
+
+\newcommand{\G}{\mathcal{G}}
+\renewcommand{\Gt}{\mathcal{G}_{\theta}}
+\renewcommand{\P}{\mathcal{P}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\F}{\mathcal{F}}
+
+\newcommand{\Nop}{\mathcal{N}}
+\newcommand{\Bop}{\mathcal{B}}
+
+\newcommand{\Ldata}{\mathcal{L}_{\mathrm{data}}}
+\newcommand{\Lphys}{\mathcal{L}_{\mathrm{phys}}}
+\newcommand{\Lbc}{\mathcal{L}_{\mathrm{bc}}}
+\newcommand{\Ltot}{\mathcal{L}_{\mathrm{total}}}
+
+\newcommand{\Jdata}{\mathcal{J}_{\mathrm{data}}}
+\newcommand{\Jphys}{\mathcal{J}_{\mathrm{phys}}}
+\newcommand{\Jbc}{\mathcal{J}_{\mathrm{bc}}}
+\newcommand{\Jtot}{\mathcal{J}_{\mathrm{total}}}
+
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\supp}{\operatorname{supp}}
+
 
 \journal{Journal of Computational Physics}
 

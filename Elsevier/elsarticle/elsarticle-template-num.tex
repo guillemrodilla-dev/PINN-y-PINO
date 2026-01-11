@@ -284,9 +284,9 @@ However, when applied to the numerical solution of PDEs, classical neural networ
 
 Hence, the above limitations highlight the need for learning frameworks that combine the expressive power of neural networks with explicit incorporation of physical knowledge. Physics-Informed Neural Networks aim to address this gap by embedding the governing equations and associated constraints directly into the learning process, as discussed in the following subsection.
 
-\section{Physics-Informed Neural Networks (PINNs)}
+\section{Physics-Informed Neural Networks}
 
-PINNs were introduced as a learning framework that combines the expressive power of neural networks with the explicit incorporation of physical laws governing the problem of interest. The central idea of PINNs is to approximate the solution of a differential equation using a standard feedforward neural network, while enforcing consistency with the underlying physics during the training process rather than relying exclusively on data. This framework was formalized in \cite{Raissi2019PINN}.
+PINNs were introduced as a learning framework that combines the expressive power of neural networks with the explicit incorporation of physical laws governing the problem of interest. The central idea of PINNs is to approximate the solution of a differential equation using a standard feedforward neural network, while enforcing consistency with the underlying physics during the training process rather than relying exclusively on data. This framework was formalized by \cite{Raissi2019PINN}.
 
 Let $u(x)$ denote the unknown solution of a partial differential equation defined over a domain $\Omega \subset \R^d$, governed by
 \[

@@ -69,7 +69,7 @@
 \newcommand{\E}{\mathbb{E}}
 
 \newcommand{\G}{\mathcal{G}}
-\renewcommand{\Gt}{\mathcal{G}_{\theta}}
+\newcommand{\Gt}{\mathcal{G}_{\theta}}
 \renewcommand{\P}{\mathcal{P}}
 \newcommand{\A}{\mathcal{A}}
 \newcommand{\U}{\mathcal{U}}
@@ -123,7 +123,7 @@
 %%             country={}}
 %% \fntext[label3]{}
 
-\title{PINNs and PINOs}
+\title{PINNs and PINOs for solving PDEs, review and implementation}
 
 %% use optional labels to link authors explicitly to addresses:
 %% \author[label1,label2]{}
@@ -535,9 +535,11 @@ Despite the aforementioned advantages of physics-informed neural networks, sever
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=\textwidth]{Imagenes/PINNs vs Traditional.png}
+\includegraphics[width=0.75\textwidth]{Imagenes/PINNs vs Traditional.png}
 \caption{Paradigm Comparison: Traditional vs. Data-Driven vs. PINNs (evaluated on PDE-specific benchmarks). Reproduced from Ren et al. \cite{app15148092}}\label{Traditional vs PINNs}
 \end{figure}
+
+\newpage
 
 From this comparison, it can be observed that PINNs exhibit favorable performance with respect to computational cost, data efficiency, and generalization capabilities, while displaying computational complexity comparable to that of conventional numerical methods. However, PINNs typically lag behind classical solvers in terms of solution accuracy and interpretability, particularly in regimes where high-fidelity numerical discretizations are well established. These observations suggest that PINNs should not be regarded as a direct replacement for traditional numerical methods, but rather as a complementary modeling strategy, especially well suited for complex, high-dimensional, or data-scarce problems where conventional approaches may face significant challenges.
 
@@ -597,7 +599,7 @@ Here, \(N_f\), \(N_b\), and \(N_0\) denote the number of collocation points for 
 
 \subsubsection{Model Training}
 
-The neural network is trained using the Adam optimizer, which is well-suited for handling the non-convex optimization landscape typical of deep learning models. The training process involves iteratively updating the network parameters \( \theta \) to minimize the total loss \( \mathcal{L} \). An initial learning rate of \( 0.001 \) is employed, and the training is conducted over \( 6,000 \) epochs, with a decay rate of 0.9 every 1000 epochs. During each epoch, the gradients of the loss function with respect to the network parameters are computed using automatic differentiation, enabling efficient backpropagation through the network. Since this model is prettty simple we do not use any stopping criteria other than the maximum number of epochs.
+The neural network is trained using the Adam optimizer, which is well-suited for handling the non-convex optimization landscape typical of deep learning models. The training process involves iteratively updating the network parameters \( \theta \) to minimize the total loss \( \mathcal{L} \). An initial learning rate of \( 0.001 \) is employed, and the training is conducted over \( 6,000 \) epochs, with a decay rate of 0.9 every 1000 epochs. During each epoch, the gradients of the loss function with respect to the network parameters are computed using automatic differentiation, enabling efficient backpropagation through the network. Since this model is pretty simple we do not use any stopping criteria other than the maximum number of epochs.
 
 Figure \ref{PINN Architecture}, reproduced from Luo et al. \cite{Luo2025}, illustrates the general framework of physics-informed neural networks, summarizing in a unified schematic the main components of the methodology described above, including the neural network approximation, the incorporation of governing equations and constraints, and the optimization process.
 
@@ -643,6 +645,8 @@ For comparing both solutions, we can substract them and obtain the error, which 
   \caption{Error between PINN and analytical solution}\label{Error PINN}
 \end{figure}
 
+\newpage
+
 Analizing the error, we can see that it is pretty low, being the maximum error around \(4 \cdot 10^{-2}\). This shows that PINNs can be a good alternative for solving PDEs.
 
 We can also visualize the comparison between the PINN and analytical solutions at specific time instances. Figure \ref{Comparison at t} illustrates the temperature distribution along the spatial domain at different times, demonstrating the close agreement between the two solutions.
@@ -659,7 +663,7 @@ For a more precise evaluation of the PINNs performance, we compute the root mean
 \text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} \left( u_{\text{PINN}}(x_i, t_i) - u_{\text{analytical}}(x_i, t_i) \right)^2}
 \end{equation}
 
-where \(N\) is the total number of evaluation points, \(u_{\text{PINN}}\) is the solution predicted by the PINN, and \(u_{\text{analytical}}\) is the exact analytical solution. For our implementation, we obtained an RMSE value of approximately \(8.71 \times 10^{-4}\), indicating a high level of accuracy in the PINN's approximation of the heat equation solution.
+where \(N\) is the total number of evaluation points, \(u_{\text{PINN}}\) is the solution predicted by the PINN, and \(u_{\text{analytical}}\) is the exact analytical solution. For our implementation, we obtained an RMSE value of approximately \(8.71 \times 10^{-4}\), indicating a high level of accuracy in the PINNs approximation of the heat equation solution.
 
 By these analyses, we can conclude that PINNs provide a viable and accurate approach for solving PDEs, effectively capturing the underlying physics of the problem while maintaining computational efficiency, although its precission may not yet rival that of traditional numerical methods in all scenarios. The distance between this two approaches may be reduced by not only using physical constraints but also data, leading to the so-called data-enhanced PINNs.
 
@@ -744,6 +748,10 @@ In this work, we have explored the methodologies of Physics-Informed Neural Netw
 
 %%\end{thebibliography}
 \end{document}
+
+\endinput
+%%
+%% End of file `elsarticle-template-num.tex'.
 
 \endinput
 %%

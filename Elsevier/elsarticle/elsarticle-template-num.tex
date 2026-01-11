@@ -207,6 +207,126 @@ PINN \sep PINO \sep Deep Learning \sep Neural Networks \sep Scientific Machine L
 
 %% main text
 %%
+
+\section{Introduction and background}
+
+Partial differential equations (PDEs) play a fundamental role in the mathematical modeling of physical and engineering processes. Among these, the heat equation stands out as a prototypical example of parabolic PDEs, describing the diffusion of thermal energy in various media. Its applications span a wide range of fields, including thermal engineering, material science, geophysics and energy systems \cite{Wang2023Concrete,Yu2024Slab,Kumar2023AnnularFin}. The mathematical formulation of the heat equation involves the temporal evolution of temperature distributions within a given domain, subject to appropriate initial and boundary conditions. For means of simplicity, we will focus on the classical form of the heat equation in one spatial dimension, to evaluate the performance of different methodologies for its solution.
+
+Over the last decades, a wide variety of classical numerical methods have been developed to approximate the solution of the heat equation. Finite difference, finite element and finite volume methods, together with more recent meshless approaches, have proven to be effective and reliable tools \cite{Sharma2014FEM,Miotti2021MeshlessHeat}. Nevertheless, these methods often rely on carefully designed meshes or point distributions, problem-dependent discretization strategies and iterative solvers whose computational cost may grow significantly with problem complexity, dimensionality or simulation time \cite{Patel2020MeshlessReview,Tadmor2012PDEReview}.
+
+In recent years, machine learning techniques have emerged as a promising alternative for the approximation of solutions to differential equations. In particular, artificial neural networks have demonstrated an extraordinary capacity to approximate complex nonlinear functions in high-dimensional spaces, as established by classical approximation theory and extensive theoretical analyses \cite{Most2005NNApprox,DeVore2021NNApproxSurvey}. This property has motivated their application to scientific computing problems, including the numerical solution of PDEs, where neural networks have been employed as flexible function approximators in data-driven frameworks \cite{Zha2022NNPDEReview,Nuugulu2025DataDrivenPDE}. However, standard neural network approaches are typically purely data-driven and require large sets of training data, which are not always available or affordable depending on the context. contexts. Moreover, since such models do not explicitly enforce the physical laws governing the underlying system, they may yield solutions that lack physical consistency \cite{Farea2024PINNChallenges,Liu2025NaturePINNs}.
+
+To address these limitations, Physics-Informed Neural Networks (PINNs) have been proposed as a novel framework that integrates physical knowledge directly into the learning process \cite{Raissi2019PINN}. By embedding the governing equations, as well as initial and boundary conditions, into the loss function of the neural network, PINNs aim to approximate solutions of partial differential equations while preserving their physical structure \cite{Baty2024IntroPINNs}. This approach offers an appealing mesh-free and flexible alternative to classical numerical methods, particularly for problems involving complex geometries, nonlinearities or limited observational data.
+
+Nevertheless, despite their promising properties and results, PINNs are not exempt from limitations. In this context, Physics-Informed Neural Operators (PINOs) were introduced in 2024 as a natural extension of PINNs \cite{10.1145/3648506}. Instead of learning a single solution, PINOs aim to approximate the solution operator that maps input functions to the corresponding solution of the governing PDE. By combining operator learning with physical constraints, PINOs seek to overcome some of the limitations of PINNs, while retaining their physics-informed nature.
+
+The objective of this work is the study of PINNs, and their operator-based extensions PINO, their implementation over a classical heat equation problem and and assess whether PINNs and PINO can provide competitive or improved approximations. This study seeks to clarify the potential advantages and limitations of physics-informed learning approaches with respect to classical numerical techniques.
+
+\subsection{Artificial neural networks}
+
+The content of this section is based on standard references in artificial intelligence and machine learning, particularly on the textbooks by Eiben and Smith \cite{eiben2015introduction} and Marsland \cite{marsland2011machine}.
+
+Artificial neural networks (ANNs) are computational models inspired by the structure and functioning of biological neural systems. Although they constitute a highly simplified abstraction of the human brain, neural networks have proven to be powerful tools for approximating complex nonlinear relationships between inputs and outputs .
+
+The fundamental building block of an artificial neural network is the artificial neuron. Inspired by the behavior of biological neurons, this model receives a set of input signals, combines them linearly using adjustable parameters known as weights, adds a bias term, and applies a nonlinear activation function to produce its output.
+
+Mathematically, the output of a single artificial neuron can be expressed as
+\[
+\mathbf{y} = \sigma\left( \sum_{i=1}^{n} \mathbf{w}_i \mathbf{x}_i + \mathbf{b} \right)
+\]
+where $x_i$ denotes the input variables, $w_i$ are the corresponding weights, $b$ is the bias term, $\sigma$ is the activation function, and $y$ represents the neuron output. The activation function introduces nonlinearity into the model and plays a crucial role in determining the expressive power of the network.
+
+Common choices for activation functions include the logistic sigmoid, the hyperbolic tangent and, in more recent applications, piecewise linear functions such as the rectified linear unit. In the context of function approximation and scientific computing, smooth activation functions are often preferred, as they facilitate the computation of derivatives and lead to smoother approximations.
+
+The weights and biases of the neuron are not fixed a priori but are learned during a training process. By adjusting these parameters, the neuron can represent a wide variety of input-output relationships. While a single neuron is limited in its representational capacity, combining multiple neurons allows the construction of more expressive models capable of capturing complex nonlinear behaviors.
+
+\subsubsection{Feedforward neural networks}
+
+While a single artificial neuron is only capable of representing very simple input-output relationships, practical applications rely on networks formed by combining many neurons into structured architectures. The most common and widely used class of artificial neural networks is the feedforward neural network, also known as the multilayer perceptron \cite{marsland2011machine}.
+
+A feedforward neural network consists of an input layer, one or more hidden layers, and an output layer. Each layer is composed of several neurons, and connections are only allowed from one layer to the next, so that information propagates in a single direction from the input to the output. No feedback or recurrent connections are present, which simplifies both the mathematical formulation and the training process.
+
+Let $\mathbf{x} \in \mathbb{R}^n$ denote the input vector. In a matrix formulation, the output of the first hidden layer is given by
+\[
+\mathbf{y}_1 = \sigma\!\left( \mathbf{W}_1 \mathbf{x} + \mathbf{b}_1 \right)
+\]
+where $\mathbf{W}_1$ is the weight matrix connecting the input layer to the first hidden layer, $\mathbf{b}_1$ is the corresponding bias vector, $\sigma$ denotes an the activation function used. For subsequent layers $l = 2, \dots, L$, the network output is computed recursively as:
+\[
+\mathbf{y}_l = \sigma\!\left( \mathbf{W}_l \mathbf{y}_{l-1} + \mathbf{b}_l \right),
+\]
+
+This hierarchical structure allows the network to build increasingly abstract representations of the input data across successive layers.
+
+One of the key theoretical results supporting the use of feedforward neural networks is the universal approximation theorem. This theorem states that, under mild assumptions on the activation function, a feedforward neural network with at least one hidden layer and a sufficient number of neurons can approximate any continuous function on a compact domain to arbitrary accuracy \cite{DeVore2021NNApproxSurvey}. This property makes neural networks particularly appealing as general-purpose function approximators.
+
+In the context of scientific computing and the numerical solution of partial differential equations, feedforward neural networks can be viewed as parametric representations of unknown solution fields. It provide a flexible, mesh-free framework for approximating solutions. However, the practical performance of such approximations depends critically on how the network parameters are determined, which is addressed through the training process described in the following subsection.
+
+\subsubsection{Training process and loss functions}
+
+The parameters of a Feedforward neural networks, namely the weights and biases of all neurons, are determined through a training process, in which the network learns to approximate a target function by minimizing a predefined loss function.
+
+Given a set of training data $\{(\mathbf{x}^{(j)}, \mathbf{u}^{(j)})\}_{j=1}^{N}$, where $\mathbf{x}^{(j)}$ denotes the input variables and $\mathbf{u}^{(j)}$ the corresponding target outputs (or solutions in the case of PDEs), the goal of training is to find the network parameters, represented by $\theta$, that minimize the discrepancy between the network predictions $\mathbf{u}_{\mathrm{NN}}(\mathbf{x}^{(j)};\theta)$ and the observed outputs. A commonly used loss function is the mean squared error (MSE), defined as
+\[
+\mathcal{L}_{\mathrm{MSE}} =
+\frac{1}{N} \sum_{j=1}^{N}
+\left\| \mathbf{u}_{\mathrm{NN}}(\mathbf{x}^{(j)};\theta) - \mathbf{u}^{(j)} \right\|^2
+\]
+
+The minimization of the loss function is typically performed using gradient-based optimization methods. The gradients of the loss function with respect to the network parameters are efficiently computed through the backpropagation algorithm, which applies the chain rule of calculus to propagate error information from the output layer back to the earlier layers. This procedure allows for the iterative adjustment of the network parameters, progressively reducing the loss over successive training epochs.
+
+In the context of regression problems, and in particular for function approximation tasks, this training strategy has proven highly effective when sufficient and representative data are available. However, the quality of the learned model strongly depends on the availability, accuracy and distribution of the training data, which not always are guaranteed in practice.
+
+\subsubsection{Strengths and limitations of classical neural networks}
+
+Classical feedforward neural networks possess several appealing properties that have contributed to their widespread use in machine learning and scientific computing. Their flexible architectures and nonlinear activation functions enable them to approximate complex input-output relationships without requiring an explicit analytical form of the underlying function. Moreover, neural networks provide a mesh-free representation and, once trained, allow for efficient evaluation at arbitrary points in the input domain \cite{Ojha_2017}.
+
+However, when applied to the numerical solution of PDEs, classical neural networks exhibit important limitations. Their performance strongly depends on the availability of large and representative training datasets, which in physics-based problems often require costly numerical simulations or experiments \cite{linka2023new}. In addition, standard training procedures do not enforce compliance with the governing physical laws, leading to solutions that may violate differential equations, boundary conditions or conservation principles, particularly in regions with sparse data. Further challenges include sensitivity to hyperparameter choices, slow convergence and limited extrapolation capabilities \cite{202504.2577}.
+
+Hence, the above limitations highlight the need for learning frameworks that combine the expressive power of neural networks with explicit incorporation of physical knowledge. Physics-Informed Neural Networks aim to address this gap by embedding the governing equations and associated constraints directly into the learning process, as discussed in the following subsection.
+
+\section{Physics-Informed Neural Networks (PINNs)}
+
+PINNs were introduced as a learning framework that combines the expressive power of neural networks with the explicit incorporation of physical laws governing the problem of interest. The central idea of PINNs is to approximate the solution of a differential equation using a standard feedforward neural network, while enforcing consistency with the underlying physics during the training process rather than relying exclusively on data. This framework was formalized in \cite{Raissi2019PINN}.
+
+Let $u(x)$ denote the unknown solution of a partial differential equation defined over a domain $\Omega$, governed by
+\[
+\mathcal{N}[u](x) = 0, \qquad x \in \Omega
+\]
+where $\mathcal{N}[\cdot]$ represents a differential operator. In the PINN framework, the solution $u(x)$ is approximated by a neural network $u_{\mathrm{PINN}}(x;\theta)$, parameterized by weights and biases $\theta$. Importantly, the network architecture itself does not differ from that of classical feedforward neural networks; instead, the defining characteristic of PINNs lies in how the learning problem is formulated.
+
+By exploiting automatic differentiation, the neural network approximation $u_{\mathrm{PINN}}(x;\theta)$ can be differentiated with respect to its inputs, allowing the differential operator $\mathcal{N}[\cdot]$ to be evaluated directly on the network output. This enables the construction of a physics-based residual
+\[
+r(x;\theta) = \mathcal{N}[u_{\mathrm{PINN}}](x;\theta)
+\]
+which measures the extent to which the neural network prediction satisfies the governing equation. As a result, the training process seeks network parameters that not only fit available data, if any, but also minimize the violation of the physical laws encoded by the differential equation. This formulation allows PINNs to incorporate prior knowledge in the form of governing equations, initial conditions and boundary conditions, yielding physics-consistent approximations even in regimes where data are sparse or partially unavailable.
+
+\subsection{Physics-informed loss function}
+
+The defining feature of Physics-Informed Neural Networks lies in the construction of the loss function used during training. Unlike classical neural networks, which minimize a loss based solely on data mismatch, PINNs incorporate physical constraints directly into the learning objective. These constraints are derived from the governing differential equations, as well as from initial and boundary conditions, and are enforced throughout the training process.
+
+In its general form, the physics-informed loss function can be written as
+\[
+\mathcal{L}(\theta) =
+\mathcal{L}_{\mathrm{data}}(\theta)
++ \mathcal{L}_{\mathrm{PDE}}(\theta)
++ \mathcal{L}_{\mathrm{BC}}(\theta)
++ \mathcal{L}_{\mathrm{IC}}(\theta).
+\]
+where $\mathcal{L}_{\mathrm{data}}$ measures the mismatch between network predictions and available observations, while $\mathcal{L}_{\mathrm{PDE}}$, $\mathcal{L}_{\mathrm{BC}}$ and $\mathcal{L}_{\mathrm{IC}}$ penalize violations of the governing differential equation, boundary conditions and initial conditions, respectively.
+
+The physics-based loss term is constructed by evaluating the residual of the differential equation at a set of points sampled within the computational domain, commonly referred to as collocation points. Given the neural network approximation $u_{\mathrm{PINN}}(x;\theta)$, the residual is defined as
+\[
+r(x;\theta) = \mathcal{N}[u_{\mathrm{PINN}}](x;\theta),
+\]
+and the corresponding loss term typically takes the form
+\[
+\mathcal{L}_{\mathrm{PDE}}(\theta)
+= \frac{1}{N_r} \sum_{i=1}^{N_r} \left| r(x_i;\theta) \right|^2,
+\]
+where $\{x_i\}_{i=1}^{N_r}$ denotes the set of collocation points in the domain. Importantly, these points do not require labeled solution data, as the governing equation itself provides the supervisory signal.
+
+The evaluation of the residual and its derivatives relies on automatic differentiation, which enables exact computation of derivatives of the neural network output with respect to its inputs up to machine precision. By minimizing the combined loss function, the network is trained to produce solutions that simultaneously fit available data and satisfy the underlying physical laws, thereby yielding physically consistent approximations even in data-scarce settings.
+
 \section{Limitations of Physics-Informed Neural Networks}
 
 Physics-Informed Neural Networks (PINNs) provide a flexible framework for incorporating physical laws into neural network training. However, despite their conceptual appeal, several practical limitations have been widely reported in the literature.

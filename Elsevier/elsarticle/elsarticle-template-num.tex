@@ -468,7 +468,8 @@ and the corresponding physics-informed loss is defined over the space--time doma
         \abs{
             \frac{\partial \Gt(a)}{\partial t}(x,t)
             - \mathcal{R}(\Gt(a)(x,t))
-        }^2 \, \mathrm{d}x \, \mathrm{d}t + \alpha\int_0^T \int_{\partial D} 
+        }^2 \, \mathrm{d}x \, \mathrm{d}t \\
+        & + \alpha\int_0^T \int_{\partial D} 
         \abs{
             \Gt(a)(x,t)
             - g(x,t)
